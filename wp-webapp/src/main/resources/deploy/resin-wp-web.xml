@@ -1,0 +1,98 @@
+<!--
+   - Resin 4.0 configuration file.
+  -->
+<resin xmlns="http://caucho.com/ns/resin"
+       xmlns:resin="urn:java:com.caucho.resin">
+    <log name="" level="info" path="stdout:"
+         timestamp="[%H:%M:%S.%s] {%{thread}} "/>
+    <logger name="com.caucho" level="info"/>
+    <logger name="com.caucho.java" level="config"/>
+    <logger name="com.caucho.loader" level="config"/>
+    <stdout-log path="${deploy.log.home}/resin/${name}-##port##/stdout.log" rollover-period="1D" rollover-count="7"/>
+    <stderr-log path="${deploy.log.home}/resin/${name}-##port##/stderr.log" rollover-period="1D" rollover-count="7"/>
+  <!--
+     - Default configuration applied to all clusters, including
+     - HTTP, HTTPS, and /resin-admin configuration.
+    -->
+  <resin:import path="${deploy.resin.home}/conf/cluster-default.xml"/>
+  <!--
+     - health configuration
+    -->
+  <resin:import path="${deploy.resin.home}/conf/health.xml"/>
+  <!--
+     - Remote management requires at least one enabled admin user.
+    -->
+  <resin:AdminAuthenticator>
+    <user name="${admin_user}" password="${admin_password}"/>
+    <resin:import path="${deploy.resin.home}/conf/admin-users.xml" optional="true"/>
+    <resin:import path="cloud:/admin-users.xml" optional="true" recover="true"/>
+  </resin:AdminAuthenticator>
+  <!--
+     - For clustered systems, create a password in as cluster_system_key
+    -->
+  <cluster-system-key>${cluster_system_key}</cluster-system-key>
+  <!--
+     - For production sites, change dependency-check-interval to something
+     - like 600s, so it only checks for updates every 10 minutes.
+    -->
+  <dependency-check-interval>${dependency_check_interval?:'2s'}</dependency-check-interval>
+
+  <!-- For resin.properties dynamic cluster joining -->
+  <home-cluster>${home_cluster}</home-cluster>
+  <home-server>${home_server}</home-server>
+  <elastic-server>${elastic_server}</elastic-server>
+  <elastic-dns>${elastic_dns}</elastic-dns>
+
+  <cluster id="web">
+     <server-default>
+			<jvm-arg>-XX:+UseConcMarkSweepGC</jvm-arg>
+            <jvm-arg>-XX:+CMSIncrementalMode</jvm-arg>
+            <jvm-arg>-XX:+CMSIncrementalPacing</jvm-arg>
+            <jvm-arg>-XX:CMSIncrementalDutyCycleMin=0</jvm-arg>
+            <jvm-arg>-XX:CMSIncrementalDutyCycle=10</jvm-arg>
+            <jvm-arg>-XX:+PrintGCDetails</jvm-arg>
+            <jvm-arg>-XX:-TraceClassUnloading</jvm-arg>
+            <jvm-arg>-XX:+UseCompressedOops</jvm-arg>
+			<jvm-arg>-XX:SurvivorRatio=2</jvm-arg>
+			<jvm-arg>-XX:+UseFastAccessorMethods</jvm-arg>
+			<jvm-arg>-XX:CMSMaxAbortablePrecleanTime=300 </jvm-arg>
+			<jvm-arg>-XX:+CMSScavengeBeforeRemark</jvm-arg>
+			<jvm-arg>-XX:+UseGCLogFileRotation </jvm-arg>
+			<jvm-arg>-XX:NumberOfGCLogFiles=9 </jvm-arg>
+			<jvm-arg>-XX:GCLogFileSize=20m</jvm-arg>
+            <jvm-arg>-verbose:gc</jvm-arg>
+            <jvm-arg>-Xloggc:${deploy.log.home}/resin/${name}-##port##/gc.log</jvm-arg>
+            <jvm-arg>-Xms1024m</jvm-arg>
+            <jvm-arg>-Xmx1024m</jvm-arg>
+            <jvm-arg>-Xss1m</jvm-arg>
+            <jvm-arg>-XX:MaxPermSize=128M</jvm-arg>
+            <jvm-arg>-Djava.net.preferIPv4Stack=true</jvm-arg>
+         <jvm-arg>-Dcom.sun.management.jmxremote.port=9093</jvm-arg>
+             <jvm-arg>-Dcom.sun.management.jmxremote</jvm-arg>
+             <jvm-arg>-Dcom.sun.management.jmxremote.ssl=false</jvm-arg>
+             <jvm-arg>-Dcom.sun.management.jmxremote.authenticate=false</jvm-arg>
+
+            <watchdog-jvm-arg>-Dcom.sun.management.jmxremote</watchdog-jvm-arg>
+            <watchdog-port>2##port##</watchdog-port>
+
+            <memory-free-min>1M</memory-free-min>
+
+            <thread-max>512</thread-max>
+
+            <socket-timeout>65s</socket-timeout>
+
+            <keepalive-max>128</keepalive-max>
+            <keepalive-timeout>35s</keepalive-timeout>
+    </server-default>
+    <server id="" address="127.0.0.1" port="3##port##">
+    	<http port="2##port##" host="##host##"/>
+    </server>
+    <host-default>
+      <web-app-deploy path="webapps"/>
+    </host-default>
+    <host id="" root-directory=".">
+    	<web-app id="/" root-directory="${deploy.base}/${name}"/>
+    </host>
+  </cluster>
+
+</resin>

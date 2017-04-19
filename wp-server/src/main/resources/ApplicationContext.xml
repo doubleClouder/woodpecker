@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:util="http://www.springframework.org/schema/util" xmlns:context="http://www.springframework.org/schema/context" xmlns:task="http://www.springframework.org/schema/task"
+       xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+       http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
+       http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd http://www.springframework.org/schema/data/mongo
+          http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd">
+    <task:annotation-driven />
+    <context:component-scan base-package="com.letv.woodpecker" />
+    <context:property-placeholder location="classpath:redis.properties,classpath:mongodb.properties,classpath:mail.properties" />
+    <!--<import resource="classpath:mongo-dao.xml"/>-->
+    <import resource="classpath:${mongodb.config}.xml"/>
+    <import resource="classpath:redis-cluster.xml"/>
+
+    <bean id="redisQueueListener" class="com.letv.woodpecker.redis.impl.RedisQueueListener"/>
+
+   <!-- <bean id="redisQueue" class="com.letv.woodpecker.redis.RedisQueue" destroy-method="destroy">
+        <property name="redisTemplate" ref="redisTemplate"></property>
+        <property name="key" value="openeco"></property>
+        <property name="listener" ref="redisQueueListener"></property>
+    </bean>-->
+    <bean id="threadPoolManageUtil" class="com.letv.woodpecker.utils.ThreadPoolManageUtil"/>
+    <bean id="initializeQueue" class="com.letv.woodpecker.redis.InitializeQueue">
+        <property name="listener" ref="redisQueueListener"></property>
+        <property name="redisTemplate" ref="redisTemplate"></property>
+    </bean>
+    <!-- 邮件发送器 163  -->
+    <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+        <property name="host" value="${mail.host}" />
+        <property name="username" value="${mail.user}" />
+        <property name="password" value="${mail.pass}" />
+        <property name="protocol" value="${mail.transport.protocol}"/>
+        <property name="defaultEncoding" value="UTF-8"></property>
+        <property name="javaMailProperties">
+            <props>
+                <prop key="mail.smtp.auth">${mail.smtp.auth}</prop>
+            </props>
+        </property>
+    </bean>
+
+</beans>
